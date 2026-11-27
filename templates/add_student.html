@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit student' if is_edit else 'Add student' }}{% endblock %}
+{% block breadcrumb %}{{ 'Edit student' if is_edit else 'Add student' }}{% endblock %}
+{% block content %}
+<div class="page-heading"><div><div class="eyebrow"><span></span> STUDENT MANAGEMENT</div><h1>{{ 'Edit student' if is_edit else 'Add a student' }}</h1><p>{{ 'Update student information and subject scores.' if is_edit else 'Create a student record and start tracking their progress.' }}</p></div><a class="button button-secondary" href="{{ url_for('student_records') }}"><i class="bi bi-arrow-left"></i> Back to records</a></div>
+<form method="post" action="{{ url_for('edit_student', id=student.id) if is_edit else url_for('add_student') }}" class="form-layout" data-student-form>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="form-main">
+    {% if errors %}<div class="form-alert" role="alert"><i class="bi bi-exclamation-circle"></i><div><strong>Please check the details below.</strong><span>Make sure each field is valid before saving.</span>{% for key, error in errors.items() %}{% if key not in ['name','roll_number','email','department','semester','python','java','sql','mathematics','english'] %}<span>{{ error }}</span>{% endif %}{% endfor %}</div></div>{% endif %}
+    <section class="panel form-panel"><div class="form-section-heading"><span class="form-section-icon blue"><i class="bi bi-person-vcard"></i></span><div><h2>Student information</h2><p>The essentials for identifying this student.</p></div><span class="step-label">01 / 02</span></div>
+      {% macro field(key, label, placeholder, type='text') %}<div class="field {% if errors.get(key) %}has-error{% endif %}"><label for="{{ key }}">{{ label }} {% if key == 'email' %}(optional){% else %}<span>*</span>{% endif %}</label><input id="{{ key }}" name="{{ key }}" type="{{ type }}" placeholder="{{ placeholder }}" value="{{ student.get(key, '') if student.get(key) is not none else '' }}" {% if key == 'semester' %}min="1" max="12" step="1"{% endif %} {% if key != 'email' %}required{% endif %} {% if errors.get(key) %}aria-invalid="true" aria-describedby="{{ key }}-error"{% endif %}>{% if errors.get(key) %}<small class="field-error" id="{{ key }}-error">{{ errors.get(key) }}</small>{% endif %}</div>{% endmacro %}
+      <div class="form-grid">{{ field('name', 'Full name', 'e.g. Alex Johnson') }}{{ field('roll_number', 'Roll number', 'e.g. STU-001') }}{{ field('email', 'Email address', 'e.g. alex@school.edu', 'email') }}{{ field('department', 'Department', 'e.g. Computer Science') }}{{ field('semester', 'Semester', 'e.g. 3', 'number') }}</div>
+    </section>
+    <section class="panel form-panel"><div class="form-section-heading"><span class="form-section-icon purple"><i class="bi bi-journal-check"></i></span><div><h2>Subject scores</h2><p id="mark-precision">Enter marks out of 100, with up to 2 decimal places.</p></div><span class="step-label">02 / 02</span></div><div class="form-grid marks-grid">{% for key, label, icon in [('python','Python','code-slash'),('java','Java','cup-hot'),('sql','SQL','database'),('mathematics','Mathematics','calculator'),('english','English','book')] %}<div class="field {% if errors.get(key) %}has-error{% endif %}"><label for="{{ key }}">{{ label }} <span>*</span></label><div class="input-suffix"><input id="{{ key }}" name="{{ key }}" type="number" min="0" max="100" step="0.01" placeholder="0" value="{{ student.get(key, '') if student.get(key) is not none else '' }}" required data-mark aria-describedby="mark-precision{% if errors.get(key) %} {{ key }}-error{% endif %}" {% if errors.get(key) %}aria-invalid="true"{% endif %}><span>/ 100</span></div>{% if errors.get(key) %}<small class="field-error" id="{{ key }}-error">{{ errors.get(key) }}</small>{% endif %}</div>{% endfor %}</div></section>
+    <div class="form-actions"><a class="button button-secondary" href="{{ url_for('student_records') }}">Cancel</a><button type="submit" class="button button-primary"><i class="bi bi-check2"></i> {{ 'Save changes' if is_edit else 'Create student' }}</button></div>
+  </div>
+  <aside class="form-aside"><div class="panel preview-card"><div class="preview-icon"><i class="bi bi-lightning-charge"></i></div><div class="eyebrow">QUICK PREVIEW</div><h2>Every score tells a story.</h2><p>Enter all five subject scores to preview the overall average.</p><div class="preview-average"><span>OVERALL AVERAGE</span><strong data-average-preview>—</strong></div><div class="preview-hint"><i class="bi bi-info-circle"></i><span>Pass or fail is based on individual subject scores, separately from the overall grade.</span></div></div><div class="side-note"><i class="bi bi-shield-check"></i><span>Your student records are managed in this workspace.</span></div></aside>
+</form>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.querySelector('[data-student-form]');
+    const marks = [...form.querySelectorAll('[data-mark]')];
+    const preview = form.querySelector('[data-average-preview]');
+    const updatePreview = () => {
+      const valid = marks.every((input) => input.value.trim() !== '' && input.validity.valid && Number.isFinite(Number(input.value)));
+      preview.textContent = valid ? `${(marks.reduce((sum, input) => sum + Math.round(Number(input.value) * 100), 0) / (marks.length * 100)).toFixed(3)}%` : '—';
+    };
+    marks.forEach((input) => input.addEventListener('input', updatePreview));
+    updatePreview();
+  });
+</script>
+{% endblock %}
