@@ -1,5 +1,8 @@
 🚀 **Week 1 Internship Project Completed – Student Grade Analyzer Using Python**
+
+
 LIVE DEMO: https://student-grade-analyzer-y7e3.onrender.com
+
 I'm excited to share my Week 1 project as part of my **AI & ML Internship at Codomax Digital Solutions**.
 
 For this task, I developed a Student Grade Analyzer using Python and Flask, designed as a web-based academic management portal.
